@@ -1,9 +1,8 @@
-import tensorflow as tf
-import numpy as np
 import copy
 
-from model import *
 from input_data import ToyDataset
+from model import *
+
 
 class TrainManager:
     def __init__(self):
@@ -27,7 +26,6 @@ class TrainManager:
         self.tested_examples = ['circumstances', 'affirmative', 'corresponding', 'caraphernology',
                                 'experimentation', 'dizziness', 'harambelover', 'terrifyingly',
                                 'axbycydxexfyzxxy']
-
 
     def tok2idx(self, batch_data):
         source_sent, target_sent = batch_data
@@ -69,8 +67,6 @@ class TrainManager:
         pass
 
 
-
-
 class Train_BasicEncoderDecoder(TrainManager):
 
     def run_model(self):
@@ -86,9 +82,9 @@ class Train_BasicEncoderDecoder(TrainManager):
 
                 _, training_loss = sess.run([model.train_op, model.train_loss],
                                             feed_dict={
-                                                model.encoder_inputs:encoder_inputs,
-                                                model.decoder_inputs:decoder_inputs,
-                                                model.decoder_outputs:decoder_outputs,
+                                                model.encoder_inputs: encoder_inputs,
+                                                model.decoder_inputs: decoder_inputs,
+                                                model.decoder_outputs: decoder_outputs,
                                                 model.keep_prob: 0.5})
                 average_loss += training_loss / plot_every_steps
 
@@ -97,9 +93,9 @@ class Train_BasicEncoderDecoder(TrainManager):
                         = self.tok2idx(self.dataset.get_test_data())
                     accu = sess.run(model.accuracy,
                                     feed_dict={
-                                        model.encoder_inputs:encoder_inputs,
-                                        model.decoder_inputs:decoder_inputs,
-                                        model.decoder_outputs:decoder_outputs,
+                                        model.encoder_inputs: encoder_inputs,
+                                        model.decoder_inputs: decoder_inputs,
+                                        model.decoder_outputs: decoder_outputs,
                                         model.keep_prob: 1.0})
 
                     # test some difficult examples
@@ -121,8 +117,6 @@ class Train_BasicEncoderDecoder(TrainManager):
                     average_loss = 0
 
 
-
-
 class Train_AttenNet(TrainManager):
     def run_model(self):
         model = AttenNet(name='AttenNet', vocab_size=self.vocab_size)
@@ -137,9 +131,9 @@ class Train_AttenNet(TrainManager):
 
                 _, training_loss = sess.run([model.train_op, model.train_loss],
                                             feed_dict={
-                                                model.encoder_inputs:encoder_inputs,
-                                                model.decoder_inputs:decoder_inputs,
-                                                model.decoder_outputs:decoder_outputs,
+                                                model.encoder_inputs: encoder_inputs,
+                                                model.decoder_inputs: decoder_inputs,
+                                                model.decoder_outputs: decoder_outputs,
                                                 model.keep_prob: 0.5})
                 average_loss += training_loss / plot_every_steps
 
@@ -148,20 +142,20 @@ class Train_AttenNet(TrainManager):
                         = self.tok2idx(self.dataset.get_test_data())
                     accu = sess.run(model.accuracy,
                                     feed_dict={
-                                        model.encoder_inputs:encoder_inputs,
-                                        model.decoder_inputs:decoder_inputs,
-                                        model.decoder_outputs:decoder_outputs,
+                                        model.encoder_inputs: encoder_inputs,
+                                        model.decoder_inputs: decoder_inputs,
+                                        model.decoder_outputs: decoder_outputs,
                                         model.keep_prob: 1.0})
 
                     # test some difficult examples
                     encoder_inputs, decoder_inputs, decoder_outputs, \
                         = self.tok2idx((self.tested_examples, self.tested_examples))
                     pred, cum_att_weights = sess.run([model.predict, model.cum_att_weights],
-                                    feed_dict={
-                                        model.encoder_inputs: encoder_inputs,
-                                        model.decoder_inputs: decoder_inputs,
-                                        model.decoder_outputs: decoder_outputs,
-                                        model.keep_prob: 1.0})
+                                                     feed_dict={
+                                                         model.encoder_inputs: encoder_inputs,
+                                                         model.decoder_inputs: decoder_inputs,
+                                                         model.decoder_outputs: decoder_outputs,
+                                                         model.keep_prob: 1.0})
 
                     for ii in range(len(self.tested_examples)):
                         print()
@@ -231,14 +225,14 @@ class Train_CopyNet(TrainManager):
 
     def run_model(self):
         model = CopyNet(name='CopyNet', vocab_size=self.vocab_size)
-        plot_every_steps = 100
+        plot_every_steps = 100  # 100
         print('train EncoderDecoder with copy mechanism ... ')
 
         with tf.Session() as sess:
             sess.run(tf.group(tf.global_variables_initializer()))
             average_loss = 0
 
-            for step in range(1, 50000):
+            for step in range(1, 50000):  # 50000
                 encoder_inputs, decoder_inputs, decoder_outputs, batch_OOV_tokens \
                     = self.tok2idx(self.dataset.get_batch())
 
@@ -247,7 +241,7 @@ class Train_CopyNet(TrainManager):
                                                        model.decoder_inputs: decoder_inputs,
                                                        model.decoder_outputs: decoder_outputs,
                                                        model.batch_OOV_num: np.max([len(tokens) for tokens in
-                                                                             batch_OOV_tokens]),
+                                                                                    batch_OOV_tokens]),
                                                        model.keep_prob: 0.5})
                 average_loss += training_loss / plot_every_steps
 
@@ -259,19 +253,32 @@ class Train_CopyNet(TrainManager):
                                                model.decoder_inputs: decoder_inputs,
                                                model.decoder_outputs: decoder_outputs,
                                                model.batch_OOV_num: np.max([len(tokens) for tokens in
-                                                                             batch_OOV_tokens]),
+                                                                            batch_OOV_tokens]),
                                                model.keep_prob: 1.0})
-
 
                     encoder_inputs, decoder_inputs, decoder_outputs, batch_OOV_tokens \
                         = self.tok2idx((self.tested_examples, self.tested_examples))
-                    pred = sess.run(model.predict,
-                                    feed_dict={model.encoder_inputs: encoder_inputs,
-                                               model.decoder_inputs: decoder_inputs,
-                                               model.decoder_outputs: decoder_outputs,
-                                               model.batch_OOV_num: np.max([len(tokens) for tokens in
-                                                                             batch_OOV_tokens]),
-                                               model.keep_prob: 1.0})
+
+                    # pred = sess.run(model.predict,
+                    #                 feed_dict={model.encoder_inputs: encoder_inputs,
+                    #                            model.decoder_inputs: decoder_inputs,
+                    #                            model.decoder_outputs: decoder_outputs,
+                    #                            model.batch_OOV_num: np.max([len(tokens) for tokens in
+                    #                                                         batch_OOV_tokens]),
+                    #                            model.keep_prob: 1.0})
+
+                    max_col = np.shape(decoder_outputs)[-1]
+
+                    for col in range(0, max_col):
+                        decoder_inputs[:, 1:col + 1] = decoder_outputs[:, 0:col]
+
+                        pred = sess.run(model.predict,
+                                        feed_dict={model.encoder_inputs: encoder_inputs,
+                                                   model.decoder_inputs: decoder_inputs,
+                                                   model.decoder_outputs: decoder_outputs,
+                                                   model.batch_OOV_num: np.max([len(tokens) for tokens in
+                                                                                batch_OOV_tokens]),
+                                                   model.keep_prob: 1.0})
 
                     for ii in range(len(self.tested_examples)):
                         print()
